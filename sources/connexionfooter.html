@@ -1,0 +1,142 @@
+<div id="corps_liens" class="clear2">
+  <center>
+    <div id="actions">
+      <div id="titre">Actions</div>
+      </br>
+      <?php
+        define ('POSTER_NOTE', 0x01); // Constantes de droits
+  		  define ('COMMENTER_NOTE', 0x02); 
+		  define ('LIRE_QUESTION', 0x04);
+        define ('POSTER_QUESTION', 0x08);
+        define ('REPONDRE_QUESTION', 0x010);
+        define ('INACTIVER_COMPTE', 0x020);
+        define ('SUPPRIMER_COMPTE', 0x040);
+  
+  		  if (!((int)$_SESSION['droits'])) 
+  		  {
+
+          echo 'Connectez-vous pour afficher les actions disponibles';
+        }
+        else
+        {
+        if (((int)$_SESSION['droits']) & POSTER_NOTE)
+        {
+          echo '<a href="newnote.php">Poster une note</a></br>';
+        }
+        if (((int)$_SESSION['droits']) & POSTER_QUESTION)
+        {
+          echo '<a href="newquestion.php">Poster une question</a></br>';
+        }
+        if (((int)$_SESSION['droits']) & SUPPRIMER_COMPTE)
+        {
+          echo '<a href="administration.php">Administration</a>';
+        }
+        }
+      ?>
+      </br>
+      </br>
+    </div>
+    </br>
+    <div id="connexion">
+      <div id="titre">Connexion</div>
+     <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST">
+      <?php 
+        define ('POSTER_NOTE', 0x01); // Constantes de droits
+        define ('COMMENTER_NOTE', 0x02); 
+        define ('LIRE_QUESTION', 0x04);
+        define ('POSTER_QUESTION', 0x08);
+        define ('REPONDRE_QUESTION', 0x010);
+        define ('INACTIVER_COMPTE', 0x020);
+        define ('SUPPRIMER_COMPTE', 0x040);
+        $bdd = new PDO('mysql:host=localhost;dbname=technotes;charset=utf8', 'root', 'tony239');
+        // Hachage du mot de passe
+        if (isset($_POST["pseudo"]) && isset($_POST["pass"])){
+        $pass_hache = sha1($_POST['pass']);
+        // Vérification des identifiants
+        $req = $bdd->prepare('SELECT id, statut,password FROM membres WHERE pseudo = :pseudo AND password = :pass');
+        $req->execute(array(
+           	'pseudo' => $_POST["pseudo"],
+           	'pass' => $pass_hache));
+        $resultat = $req->fetch();
+        if (!$resultat)
+        {
+           	echo '<p style="color:red;">Mauvais identifiant ou mot de passe !</p>';
+        }
+        else
+        {	
+         
+         if($resultat['statut']=='Inactive')
+         {
+	         echo '<p style="color:red;">compte banni !</p>';
+         }
+         else 
+         {
+         $_SESSION['id'] = $resultat['id'];
+         $_SESSION['pseudo'] = $_POST["pseudo"];	
+         $req = $bdd->prepare('SELECT groupe.actions FROM groupe, membres WHERE membres.pseudo = :pseudo AND groupe.id = membres.id_groupe');
+         $req->execute(array('pseudo' => $_POST["pseudo"]));
+         $donnees = $req->fetch();
+         $_SESSION['droits'] = addslashes($donnees['actions']);
+         }
+        }
+        }
+        
+        if(isset($_SESSION['id']))
+        {
+        	if (isset($_POST['deconnexion']))
+        	{
+        	echo '
+        	</br>
+        	<label for="pseudo">Pseudo</label>	
+        	<input type="text" name="pseudo" style="width:90%;" >
+        	<label for="psw">Mot de passe</label>
+        	<input type="password" name="pass" style="width:90%;" >
+        	<input type="submit" name="submit" value="Connexion">
+        	<a href="inscription.php">Inscription</a>
+        	</br>
+        	</br>
+        ';
+        	}
+        	else{
+        	?>
+        	<a href="compte.php?membre=<?php echo $_SESSION["id"]; ?>"><?php echo $_SESSION['pseudo']; ?></a>
+        	<?php
+        	echo '</br>';
+        	echo'<input type="submit" name="deconnexion" value="deconnexion">';
+        	}
+        }
+        else {
+        	echo '
+        </br>
+        <label for="pseudo">Pseudo</label>	
+        <input type="text" name="pseudo" style="width:90%;" >
+        <label for="psw">Mot de passe</label>
+        <input type="password" name="pass" style="width:90%;" >
+        <input type="submit" name="submit" value="Connexion">
+        </form>
+        <a href="inscription.php">Inscription</a>
+        </br>
+        </br>
+        ';
+        }
+        ?>
+    </div>
+    </br>
+    <div id="liens">
+      <div id="titre">Liens utiles</div>
+      </br>
+      <a href="http://www.fdsweb.univ-montp2.fr/"  style="border : none"><img src="images/fds.png"></a></br>
+      <a href="https://ent.umontpellier.fr/" style="border : none"><img src="images/um2.png"></a></br>
+      <a href="http://www.lirmm.fr/" style="border : none"><img src="images/lirmm.png"></a>
+  </center>
+  </br>
+  </div>
+</div>
+</div>
+<div id="pied" class="clear">
+  <center>
+    <p>Projet Technotes 2016</br>
+      Ivan BRUNET-MANQUAT - ivan.brunet-manquat@etu.umontpellier.fr
+    </p>
+  </center>
+</div>
